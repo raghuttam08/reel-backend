@@ -1,0 +1,132 @@
+[
+  {
+    "show_name": "The Sopranos",
+    "tmdb_id": 1398,
+    "release_year": 1999,
+    "tone_tags": ["rewatch forever", "dark", "funny", "ending", "masterpiece"],
+    "honest_stats": { "finished_pct": 48, "rewatch_pct": 31, "top_word": "TONY", "overall_positive_pct": 72 },
+    "lifecycle": {
+      "release":     { "dominant_word": "bold",        "sentiment": "positive" },
+      "settled":     { "dominant_word": "classic",     "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "underrated",  "sentiment": "positive" },
+      "legacy":      { "dominant_word": "greatest",    "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "Breaking Bad",
+    "tmdb_id": 1396,
+    "release_year": 2008,
+    "tone_tags": ["rewatch forever", "perfect", "just finished", "devastating", "masterpiece"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 80, "top_word": "WALT", "overall_positive_pct": 88 },
+    "lifecycle": {
+      "release":     { "dominant_word": "different",   "sentiment": "positive" },
+      "settled":     { "dominant_word": "classic",     "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "underrated",  "sentiment": "positive" },
+      "legacy":      { "dominant_word": "greatest",    "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "Succession",
+    "tmdb_id": 73586,
+    "release_year": 2018,
+    "tone_tags": ["rewatch forever", "ending", "emotionally devastating", "perfect", "dark"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 68, "top_word": "KENDALL", "overall_positive_pct": 81 },
+    "lifecycle": {
+      "release":     null,
+      "settled":     { "dominant_word": "discussed",   "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      { "dominant_word": "greatest",    "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "The Wire",
+    "tmdb_id": 1438,
+    "release_year": 2002,
+    "tone_tags": ["rewatch forever", "masterpiece", "just finished", "perfect", "dark and bleak"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 80, "top_word": "OMAR", "overall_positive_pct": 85 },
+    "lifecycle": {
+      "release":     { "dominant_word": "ambitious",   "sentiment": "positive" },
+      "settled":     { "dominant_word": "classic",     "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "hidden gem",  "sentiment": "positive" },
+      "legacy":      { "dominant_word": "greatest",    "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "Severance",
+    "tmdb_id": 95396,
+    "release_year": 2022,
+    "tone_tags": ["rewatch forever", "finale", "just finished", "haunting", "slow burn"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 67, "top_word": "MARK", "overall_positive_pct": 79 },
+    "lifecycle": {
+      "release":     { "dominant_word": "surprising",  "sentiment": "positive" },
+      "settled":     { "dominant_word": "beloved",     "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      null
+    }
+  },
+  {
+    "show_name": "The Bear",
+    "tmdb_id": 136315,
+    "release_year": 2022,
+    "tone_tags": ["rewatch forever", "just finished", "emotional", "gut punch", "bingeable"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 54, "top_word": "CARMY", "overall_positive_pct": 76 },
+    "lifecycle": {
+      "release":     { "dominant_word": "finally",     "sentiment": "positive" },
+      "settled":     { "dominant_word": "classic",     "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      null
+    }
+  },
+  {
+    "show_name": "The Leftovers",
+    "tmdb_id": 54671,
+    "release_year": 2014,
+    "tone_tags": ["just finished", "rewatch forever", "haunting", "devastating", "dark and bleak"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 80, "top_word": "KEVIN", "overall_positive_pct": 83 },
+    "lifecycle": {
+      "release":     { "dominant_word": "divisive",    "sentiment": "neutral" },
+      "settled":     { "dominant_word": "underrated",  "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      { "dominant_word": "masterpiece", "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "Fleabag",
+    "tmdb_id": 67070,
+    "release_year": 2016,
+    "tone_tags": ["rewatch forever", "just finished", "emotionally devastating", "perfect", "beautiful"],
+    "honest_stats": { "finished_pct": 95, "rewatch_pct": 80, "top_word": "PRIEST", "overall_positive_pct": 91 },
+    "lifecycle": {
+      "release":     null,
+      "settled":     null,
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      { "dominant_word": "masterpiece", "sentiment": "positive" }
+    }
+  },
+  {
+    "show_name": "Chernobyl",
+    "tmdb_id": 87108,
+    "release_year": 2019,
+    "tone_tags": ["rewatch forever", "just finished", "emotional", "devastating", "perfect"],
+    "honest_stats": { "finished_pct": 46, "rewatch_pct": 26, "top_word": "LEGASOV", "overall_positive_pct": 77 },
+    "lifecycle": {
+      "release":     { "dominant_word": "finally",     "sentiment": "positive" },
+      "settled":     { "dominant_word": "rewatching",  "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "late",        "sentiment": "positive" },
+      "legacy":      null
+    }
+  },
+  {
+    "show_name": "True Detective",
+    "tmdb_id": 46648,
+    "release_year": 2014,
+    "tone_tags": ["rewatch forever", "dark and bleak", "slow burn", "haunting", "masterpiece"],
+    "honest_stats": { "finished_pct": 70, "rewatch_pct": 54, "top_word": "RUST", "overall_positive_pct": 74 },
+    "lifecycle": {
+      "release":     { "dominant_word": "different",   "sentiment": "positive" },
+      "settled":     { "dominant_word": "rewatching",  "sentiment": "positive" },
+      "rediscovery": { "dominant_word": "discussed",   "sentiment": "neutral" },
+      "legacy":      { "dominant_word": "masterpiece", "sentiment": "positive" }
+    }
+  }
+]
