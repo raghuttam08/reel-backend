@@ -1,17 +1,80 @@
 const express = require('express')
-const router = express.Router()
-const { Post } = require('../models')
+const jwt     = require('jsonwebtoken')
+const router  = express.Router()
+const { Post, Reaction } = require('../models')
 
-// GET /api/posts?sort=trending|recent&limit=20
-router.get('/', async (req, res) => {
+const JWT_SECRET = process.env.JWT_SECRET || 'reel_dev_secret_change_in_prod'
+
+// ─── Auth middleware ──────────────────────────────────────────────────────────
+function optionalAuth(req, res, next) {
+  const header = req.headers.authorization
+  if (header?.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(header.slice(7), JWT_SECRET)
+    } catch {}
+  }
+  next()
+}
+
+function requireAuth(req, res, next) {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer '))
+    return res.status(401).json({ error: 'Authentication required' })
   try {
-    const { sort = 'trending', limit = 20, show } = req.query
-    const query = show ? { show_name: decodeURIComponent(show) } : {}
-    const sortField = sort === 'trending' ? { score: -1 } : { createdAt: -1 }
+    req.user = jwt.verify(header.slice(7), JWT_SECRET)
+    next()
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired token' })
+  }
+}
+
+// ─── GET /api/posts — global feed ────────────────────────────────────────────
+router.get('/', optionalAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, sort = 'recent', format, show } = req.query
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+
+    const query = {}
+    if (format) query.format = format
+    if (show)   query.show_name = show
+
+    const sortObj = sort === 'trending'
+      ? { likes: -1, created_at: -1 }
+      : { created_at: -1 }
+
+    const [posts, total] = await Promise.all([
+      Post.find(query).sort(sortObj).skip(skip).limit(parseInt(limit)).lean(),
+      Post.countDocuments(query),
+    ])
+
+    res.json({
+      posts,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      }
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── GET /api/posts/show/:showName — posts for one show ──────────────────────
+router.get('/show/:showName', optionalAuth, async (req, res) => {
+  try {
+    const show = decodeURIComponent(req.params.showName)
+    const { spoiler, page = 1, limit = 30 } = req.query
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+
+    const query = { show_name: show }
+    if (spoiler !== undefined) query.is_spoiler = spoiler === 'true'
 
     const posts = await Post.find(query)
-      .sort(sortField)
-      .limit(Number(limit))
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
       .lean()
 
     res.json(posts)
@@ -20,37 +83,84 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST /api/posts — create a post
-router.post('/', async (req, res) => {
+// ─── GET /api/posts/trending — top scoring Reddit posts ──────────────────────
+router.get('/trending', async (req, res) => {
   try {
-    const { username, show_name, format, text, is_spoiler } = req.body
-    if (!username || !show_name || !format || !text)
-      return res.status(400).json({ error: 'Missing required fields' })
+    const { limit = 30 } = req.query
 
-    const post = await Post.create({ username, show_name, format, text, is_spoiler })
+    // Mix user posts + high-scoring scraped reactions
+    const [userPosts, scrapedPosts] = await Promise.all([
+      Post.find().sort({ likes: -1, created_at: -1 }).limit(parseInt(limit) / 2).lean(),
+      Reaction.find({ score: { $gte: 50 } })
+        .sort({ score: -1 })
+        .limit(parseInt(limit) / 2)
+        .lean(),
+    ])
+
+    // Normalize scraped posts to match user post shape
+    const normalizedScraped = scrapedPosts.map(r => ({
+      _id:        r._id,
+      username:   r.subreddit ? `r/${r.subreddit}` : 'reddit',
+      show_name:  r.film_name,
+      format:     'verdict',
+      text:       r.text || r.title,
+      is_spoiler: false,
+      likes:      r.score || 0,
+      score:      r.score || 0,
+      created_at: r.published || r.scraped_at,
+      published:  r.published,
+      source:     'reddit',
+    }))
+
+    const all = [...userPosts, ...normalizedScraped]
+      .sort((a, b) => (b.likes || b.score || 0) - (a.likes || a.score || 0))
+
+    res.json(all)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── POST /api/posts — create post (auth required) ───────────────────────────
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const { show_name, tmdb_id, format, text, is_spoiler } = req.body
+
+    if (!show_name || !format || !text)
+      return res.status(400).json({ error: 'show_name, format and text are required' })
+
+    if (!['moment', 'verdict', 'discovery'].includes(format))
+      return res.status(400).json({ error: 'format must be moment, verdict, or discovery' })
+
+    if (text.length > 500)
+      return res.status(400).json({ error: 'Text must be under 500 characters' })
+
+    const post = await Post.create({
+      user_id:    req.user.id,
+      username:   req.user.username,
+      show_name,
+      tmdb_id,
+      format,
+      text,
+      is_spoiler: !!is_spoiler,
+    })
+
     res.status(201).json(post)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 })
 
-// POST /api/posts/:id/upvote
-router.post('/:id/upvote', async (req, res) => {
+// ─── POST /api/posts/:id/like — like a post ──────────────────────────────────
+router.post('/:id/like', requireAuth, async (req, res) => {
   try {
-    const { username } = req.body
-    const post = await Post.findById(req.params.id)
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    )
     if (!post) return res.status(404).json({ error: 'Post not found' })
-
-    if (post.voters.includes(username)) {
-      // undo vote
-      post.score -= 1
-      post.voters.pull(username)
-    } else {
-      post.score += 1
-      post.voters.push(username)
-    }
-    await post.save()
-    res.json({ score: post.score })
+    res.json({ likes: post.likes })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

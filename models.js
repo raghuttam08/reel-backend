@@ -1,50 +1,73 @@
 const mongoose = require('mongoose')
+const bcrypt   = require('bcryptjs')
 
-// ── Raw Reddit post ──────────────────────────────────────────────
-const reactionSchema = new mongoose.Schema({
-  show_name:   { type: String, required: true, index: true },
-  title:       String,
-  body:        String,
-  score:       { type: Number, default: 0 },
-  url:         { type: String, unique: true, sparse: true },
-  created_utc: Date,
-  subreddit:   String,
-}, { timestamps: true })
+// ─── User ─────────────────────────────────────────────────────────────────────
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, trim: true, minlength: 2, maxlength: 30 },
+  email:    { type: String, required: true, unique: true, trim: true, lowercase: true },
+  password: { type: String, required: true, minlength: 6 },
+  created_at: { type: Date, default: Date.now },
+})
 
-// ── Processed show data (output of NLP) ─────────────────────────
-const showSchema = new mongoose.Schema({
-  show_name:    { type: String, required: true, unique: true },
-  tmdb_id:      Number,
-  release_year: Number,
-  tone_tags:    [String],
-  honest_stats: {
-    finished_pct:        Number,
-    rewatch_pct:         Number,
-    top_word:            String,
-    overall_positive_pct: Number,
-  },
-  lifecycle: {
-    release:     { dominant_word: String, sentiment: String },
-    settled:     { dominant_word: String, sentiment: String },
-    rediscovery: { dominant_word: String, sentiment: String },
-    legacy:      { dominant_word: String, sentiment: String },
-  },
-  processed_at: { type: Date, default: Date.now },
-}, { timestamps: true })
+// Hash password before save
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next()
+  this.password = await bcrypt.hash(this.password, 12)
+  next()
+})
 
-// ── User post (moment / verdict / discovery) ─────────────────────
-const postSchema = new mongoose.Schema({
-  username:   { type: String, required: true },
-  show_name:  { type: String, required: true, index: true },
-  format:     { type: String, enum: ['moment', 'verdict', 'discovery'], required: true },
-  text:       { type: String, required: true, maxlength: 280 },
-  is_spoiler: { type: Boolean, default: false },
-  score:      { type: Number, default: 0 },
-  voters:     [String],
-}, { timestamps: true })
-
-module.exports = {
-  Reaction: mongoose.model('Reaction', reactionSchema),
-  Show:     mongoose.model('Show',     showSchema),
-  Post:     mongoose.model('Post',     postSchema),
+// Compare password
+UserSchema.methods.comparePassword = function (candidate) {
+  return bcrypt.compare(candidate, this.password)
 }
+
+const User = mongoose.model('User', UserSchema, 'users')
+
+// ─── Show (processed NLP output) ─────────────────────────────────────────────
+const ShowSchema = new mongoose.Schema({
+  show_name:    { type: String, required: true, unique: true },
+  release_year: Number,
+  total_posts:  Number,
+  processed_at: String,
+  lifecycle:    Object,
+  tone_tags:    [String],
+  honest_stats: Object,
+  top_posts:    [Object],
+  tmdb_id:      Number,
+})
+
+const Show = mongoose.model('Show', ShowSchema, 'processed')
+
+// ─── Raw reaction (scraped Reddit posts) ─────────────────────────────────────
+const ReactionSchema = new mongoose.Schema({
+  tmdb_id:      Number,
+  film_name:    String,
+  source:       String,
+  subreddit:    String,
+  title:        String,
+  text:         String,
+  score:        Number,
+  num_comments: Number,
+  url:          { type: String },
+  published:    String,
+  scraped_at:   String,
+})
+
+const Reaction = mongoose.model('Reaction', ReactionSchema, 'reactions')
+
+// ─── User post (created on platform) ─────────────────────────────────────────
+const PostSchema = new mongoose.Schema({
+  user_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  username:   { type: String, required: true },
+  show_name:  { type: String, required: true },
+  tmdb_id:    Number,
+  format:     { type: String, enum: ['moment', 'verdict', 'discovery'], required: true },
+  text:       { type: String, required: true, maxlength: 500 },
+  is_spoiler: { type: Boolean, default: false },
+  likes:      { type: Number, default: 0 },
+  created_at: { type: Date, default: Date.now },
+})
+
+const Post = mongoose.model('Post', PostSchema, 'posts')
+
+module.exports = { User, Show, Reaction, Post }

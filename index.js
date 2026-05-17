@@ -1,33 +1,42 @@
-require('dotenv').config()
-const express = require('express')
-const cors = require('cors')
+const express  = require('express')
 const mongoose = require('mongoose')
-
-const showsRouter = require('./routes/shows')
-const postsRouter = require('./routes/posts')
-const adminRouter = require('./routes/admin')
+const cors     = require('cors')
+require('dotenv').config()
 
 const app = express()
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }))
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}))
 app.use(express.json())
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }))
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/reel')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => { console.error('MongoDB error:', err); process.exit(1) })
 
-// Routes
-app.use('/api/shows', showsRouter)
-app.use('/api/posts', postsRouter)
-app.use('/api/admin', adminRouter)
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/auth',  require('./routes/auth'))
+app.use('/api/shows', require('./routes/shows'))
+app.use('/api/posts', require('./routes/posts'))
+app.use('/api/admin', require('./routes/admin'))
 
-// Connect DB then start
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('MongoDB connected')
-    const PORT = process.env.PORT || 3001
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+// ─── Health ───────────────────────────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+  let nlpStatus = 'unreachable'
+  try {
+    const r = await fetch(`${process.env.NLP_SERVICE_URL || 'http://nlp:8001'}/health`)
+    if (r.ok) nlpStatus = 'running'
+  } catch {}
+  res.json({
+    node:  'running',
+    nlp:   nlpStatus,
+    mongo: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
   })
-  .catch(err => {
-    console.error('MongoDB connection failed:', err)
-    process.exit(1)
-  })
+})
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
