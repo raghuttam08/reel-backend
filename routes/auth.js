@@ -34,7 +34,13 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       token,
-      user: { id: user._id, username: user.username, email: user.email }
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        isPremium: user.isPremium,
+        plan: user.plan,
+      }
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -60,7 +66,13 @@ router.post('/login', async (req, res) => {
 
     res.json({
       token,
-      user: { id: user._id, username: user.username, email: user.email }
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        isPremium: user.isPremium,
+        plan: user.plan,
+      }
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -80,7 +92,15 @@ router.get('/me', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: 'User not found' })
 
-    res.json({ user: { id: user._id, username: user.username, email: user.email } })
+    res.json({
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        isPremium: user.isPremium,
+        plan: user.plan,
+      }
+    })
   } catch (err) {
     res.status(401).json({ error: 'Invalid or expired token' })
   }

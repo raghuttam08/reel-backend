@@ -7,6 +7,15 @@ const UserSchema = new mongoose.Schema({
   email:    { type: String, required: true, unique: true, trim: true, lowercase: true },
   password: { type: String, required: true, minlength: 6 },
   created_at: { type: Date, default: Date.now },
+  // Subscription fields
+  isPremium: { type: Boolean, default: false },
+  plan: { type: String, enum: ['premium', 'pro', null], default: null },
+  subscriptionExpiry: { type: Date, default: null },
+  paymentIntentId: { type: String, default: null },
+  stripeCustomerId: { type: String, default: null },
+  updatedAt: { type: Date, default: Date.now },
+  // Watchlist
+  watchlist: [{ type: String }], // Array of show names
 })
 
 // Hash password before save

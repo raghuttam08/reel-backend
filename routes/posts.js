@@ -166,4 +166,60 @@ router.post('/:id/like', requireAuth, async (req, res) => {
   }
 })
 
+// ─── PUT /api/posts/:id — update a post (auth required) ──────────────────────
+router.put('/:id', requireAuth, async (req, res) => {
+  try {
+    const { format, text, is_spoiler } = req.body
+
+    // Get the post to check ownership
+    const post = await Post.findById(req.params.id)
+    if (!post) return res.status(404).json({ error: 'Post not found' })
+
+    // Verify ownership
+    if (post.user_id.toString() !== req.user.id)
+      return res.status(403).json({ error: 'You can only edit your own posts' })
+
+    // Validate input
+    if (format && !['moment', 'verdict', 'discovery'].includes(format))
+      return res.status(400).json({ error: 'format must be moment, verdict, or discovery' })
+
+    if (text && text.length > 500)
+      return res.status(400).json({ error: 'Text must be under 500 characters' })
+
+    // Update allowed fields
+    const updates = {}
+    if (format) updates.format = format
+    if (text) updates.text = text
+    if (is_spoiler !== undefined) updates.is_spoiler = !!is_spoiler
+
+    const updated = await Post.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    )
+
+    res.json(updated)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── DELETE /api/posts/:id — delete a post (auth required) ────────────────────
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+    if (!post) return res.status(404).json({ error: 'Post not found' })
+
+    // Verify ownership
+    if (post.user_id.toString() !== req.user.id)
+      return res.status(403).json({ error: 'You can only delete your own posts' })
+
+    await Post.findByIdAndDelete(req.params.id)
+
+    res.json({ success: true, message: 'Post deleted' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 module.exports = router

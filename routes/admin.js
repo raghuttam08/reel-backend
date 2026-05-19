@@ -9,21 +9,21 @@ const NLP_URL = process.env.NLP_SERVICE_URL || 'http://localhost:8001'
 // Calls Python NLP service to process all shows and saves results to MongoDB
 router.post('/process-all', async (req, res) => {
   try {
-    // Get distinct show names from raw reactions
-    const showNames = await Reaction.distinct('show_name')
+    // Get distinct film names from raw reactions
+    const showNames = await Reaction.distinct('film_name')
     const results = []
 
     for (const name of showNames) {
-      const posts = await Reaction.find({ show_name: name }).lean()
-      if (posts.length < 10) continue // skip shows with too little data
+      const posts = await Reaction.find({ film_name: name }).lean()
+      if (posts.length < 10) continue // skip films with too little data
 
       // Call Python NLP service
       const { data } = await axios.post(`${NLP_URL}/process`, {
         show_name: name,
         posts: posts.map(p => ({
-          text: `${p.title || ''} ${p.body || ''}`.trim(),
+          text: `${p.title || ''} ${p.text || ''}`.trim(),          
           score: p.score,
-          created_utc: p.created_utc,
+          created_utc: p.published,
         }))
       })
 
@@ -52,9 +52,9 @@ router.post('/process/:name', async (req, res) => {
     const { data } = await axios.post(`${NLP_URL}/process`, {
       show_name: name,
       posts: posts.map(p => ({
-        text: `${p.title || ''} ${p.body || ''}`.trim(),
+        text: `${p.title || ''} ${p.text || ''}`.trim(),          
         score: p.score,
-        created_utc: p.created_utc,
+        created_utc: p.published,
       }))
     })
 
