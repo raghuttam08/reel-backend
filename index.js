@@ -10,7 +10,12 @@ const app = express()
 
 app.use(cors({
   origin: function(origin, callback) {
-    const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175']
+    const allowedOrigins = [
+      'http://localhost:5173', 
+      'http://localhost:5174', 
+      'http://localhost:5175',
+      'https://reel-lgba.onrender.com'
+    ]
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
